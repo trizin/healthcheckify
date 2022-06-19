@@ -10,13 +10,12 @@ use crate::healthcheck::node::model::NodeStatus;
 
 pub async fn handle_connection(mut stream: TcpStream, health_checker: Arc<Mutex<HealthChecker>>) {
     let mut buffer = [0; 1024];
-    stream.read_exact(&mut buffer).unwrap();
+    stream.read(&mut buffer).unwrap();
 
     let text = String::from_utf8_lossy(&buffer);
     let re = Regex::new("GET /(.*) HTTP").unwrap();
     let path = re.captures(&text).unwrap();
     let path = &path[1].replace('"', "");
-    health_checker.lock().unwrap().check_all().await;
 
     let stat = health_checker.lock().unwrap().check_by_id(path).await;
 
@@ -28,7 +27,7 @@ pub async fn handle_connection(mut stream: TcpStream, health_checker: Arc<Mutex<
         Err(_) => get_response("not found", 404),
     };
 
-    stream.write_all(&response).unwrap();
+    stream.write(&response).unwrap();
     stream.flush().unwrap();
 }
 
