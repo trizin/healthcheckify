@@ -61,7 +61,7 @@ impl Node {
 
         if let Err(err) = request {
             self.status = NodeStatus::Down;
-            return Err("URL error".into());
+            return Err(err.into());
         }
 
         let response = request.unwrap();
