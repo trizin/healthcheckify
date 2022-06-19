@@ -10,8 +10,7 @@ use healthchecker::{
     thread::threadpool::ThreadPool,
 };
 
-#[tokio::main]
-async fn main() {
+fn main() {
     dotenv::dotenv().ok();
 
     let addr = env::var("BIND_ADDR").unwrap_or_else(|_| String::from("127.0.0.1:8080"));
