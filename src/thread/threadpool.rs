@@ -27,9 +27,7 @@ impl ThreadPool {
     ///
     /// The `new` function will panic if the size is zero.
     pub fn new(size: usize) -> Result<Self, PoolCreationError> {
-        assert!(size > 0, "Thread pool size cannot be zero");
-
-        if size > 0 {
+        if size < 1 {
             return Err(PoolCreationError::new(
                 "Thread pool size cannot be zero".to_string(),
             ));
