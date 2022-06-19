@@ -37,18 +37,11 @@ impl Node {
         }
     }
 
-    async fn make_req(
-        &self,
-        url: &String,
-    ) -> Result<reqwest::Response, Box<dyn std::error::Error>> {
-        Ok(reqwest::get(url).await?)
-    }
-
     pub fn status(&self) -> NodeStatus {
         self.status
     }
 
-    pub async fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
+    pub fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
         println!("Checking url: '{}'", self.config.url);
 
         if self
@@ -64,11 +57,11 @@ impl Node {
         }
 
         self.status = NodeStatus::Processing;
-        let request = self.make_req(&self.config.url).await;
+        let request = reqwest::blocking::get(&self.config.url);
 
         if let Err(err) = request {
             self.status = NodeStatus::Down;
-            return Err(err);
+            return Err("URL error".into());
         }
 
         let response = request.unwrap();
@@ -83,7 +76,7 @@ impl Node {
                 }
             }
             NodeCheckStrategy::BodyContains(x) => {
-                let body = response.text().await?;
+                let body = response.text().unwrap();
                 if body.contains(x) {
                     self.status = NodeStatus::Healthy;
                 } else {
@@ -106,8 +99,8 @@ mod tests {
 
     use super::NodeStatus;
 
-    #[tokio::test]
-    async fn test_check_success() {
+    #[test]
+    fn test_check_success() {
         let node_config = NodeConfig::new("https://google.com".to_string());
         let mut node = Node::new(
             node_config,
@@ -117,11 +110,11 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await;
+        let _ = node.check();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
-    #[tokio::test]
-    async fn test_check_down() {
+    #[test]
+    fn test_check_down() {
         let node_config = NodeConfig::new("https://thiswebsitedoesntexists.xcxc".to_string());
         let mut node = Node::new(
             node_config,
@@ -131,12 +124,12 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let val = node.check().await;
+        let val = node.check();
         println!("{:?}", val);
         assert_eq!(node.status, NodeStatus::Down);
     }
-    #[tokio::test]
-    async fn test_check_with_high_timeout() {
+    #[test]
+    fn test_check_with_high_timeout() {
         let node_config = NodeConfig::new("https://google.com".to_string());
         let mut node = Node::new(
             node_config,
@@ -146,7 +139,7 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await;
+        let _ = node.check();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
 }

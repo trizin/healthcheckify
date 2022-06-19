@@ -8,7 +8,7 @@ use regex::Regex;
 use crate::healthcheck::health_checker::HealthChecker;
 use crate::healthcheck::node::model::NodeStatus;
 
-pub async fn handle_connection(mut stream: TcpStream, health_checker: Arc<Mutex<HealthChecker>>) {
+pub fn handle_connection(mut stream: TcpStream, health_checker: Arc<Mutex<HealthChecker>>) {
     let mut buffer = [0; 1024];
     Read::read(&mut stream, &mut buffer).unwrap();
 
@@ -17,7 +17,7 @@ pub async fn handle_connection(mut stream: TcpStream, health_checker: Arc<Mutex<
     let path = re.captures(&text).unwrap();
     let path = &path[1].replace('"', "");
 
-    let stat = health_checker.lock().unwrap().check_by_id(path).await;
+    let stat = health_checker.lock().unwrap().check_by_id(path);
 
     let response = match stat {
         Ok(stat) if stat == NodeStatus::Down => get_response("error", 500),

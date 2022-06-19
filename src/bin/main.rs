@@ -23,8 +23,8 @@ async fn main() {
         let stream = stream.unwrap();
         let hc_copy = Arc::clone(&hc);
 
-        handle_connection(stream, hc_copy).await;
-        // pool.execute(async || {
-        // })
+        pool.execute(|| {
+            handle_connection(stream, hc_copy);
+        })
     }
 }
