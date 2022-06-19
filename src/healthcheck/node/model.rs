@@ -42,7 +42,9 @@ impl Node {
     }
 
     pub fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
-        println!("Checking url: '{}'", self.config.url);
+        if std::env::var("ENV").unwrap_or_else(|_| String::from("debug")) == "debug" {
+            println!("Checking url: '{}'", self.config.url);
+        }
 
         if self
             .last_check
