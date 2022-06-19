@@ -128,4 +128,24 @@ mod tests {
         assert_eq!(checker.status_by_id("test3").unwrap(), NodeStatus::Down);
     }
 
+    #[tokio::test]
+    async fn test_stringcontains_strategy() {
+        let data = r#"
+        [
+        {
+            "id":"test1",
+            "path": "https://cheat.sh/",
+            "strategy": "stringcontains",
+            "strategy_string":"The only cheat sheet",
+            "timeout": "statuscode"
+        }
+        ]"#;
+
+        let mut checker = HealthChecker::new(data.to_string());
+        _ = checker.check_by_id("test1").await;
+
+        assert_eq!(checker.status(0), NodeStatus::Healthy);
+
+        assert_eq!(checker.status_by_id("test1").unwrap(), NodeStatus::Healthy);
+    }
 }
