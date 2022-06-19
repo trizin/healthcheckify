@@ -1,6 +1,10 @@
-use std::time::SystemTime;
+use std::error::Error;
 
-use crate::healthcheck::{node::model::Node, node::model::NodeStatus, parser::parse_config};
+use crate::healthcheck::{
+    node::model::Node,
+    node::model::{NodeCheckStrategy, NodeStatus},
+    parser::parse_config,
+};
 
 use super::node::config::NodeConfig;
 
@@ -16,8 +20,19 @@ impl HealthChecker {
         for config in node_configs.iter() {
             let node_config = NodeConfig::new(config["path"].as_str().unwrap().trim().to_string());
             let id = config["id"].as_str().unwrap();
+            let timeout = config["timeout"].as_u64().unwrap_or(10u64) as u32;
+            let strategy = match config["strategy"].as_str().unwrap_or("statuscode") {
+                "stringcontains" => {
+                    let _contains_string = config["strategy_string"]
+                        .as_str()
+                        .expect("Strategy search string not defined");
 
-            nodes.push(Node::new(node_config, id.to_string()));
+                    NodeCheckStrategy::BodyContains(_contains_string.to_string())
+                }
+                _ => NodeCheckStrategy::StatusCode, // default strategy
+            };
+
+            nodes.push(Node::new(node_config, id.to_string(), strategy, timeout));
         }
 
         println!("Health checker loaded with {} nodes", nodes.len());
@@ -30,20 +45,28 @@ impl HealthChecker {
     }
 
     pub fn status_by_id(&self, id: &str) -> Option<NodeStatus> {
-        if let Some(node) = self.nodes.iter().find(|&x| x.id == id) {
-            return Some(node.status());
-        } else {
-            return None;
-        }
+        self.nodes
+            .iter()
+            .find(|&x| x.id == id)
+            .map(|node| node.status())
     }
 
-    pub async fn check(&mut self, u: usize) {
-        self.nodes[u].check().await;
+    pub async fn check(&mut self, u: usize) -> Result<NodeStatus, Box<dyn Error>> {
+        self.nodes[u].check().await
+    }
+
+    pub async fn check_by_id(&mut self, id: &str) -> Result<NodeStatus, Box<dyn Error>> {
+        self.nodes
+            .iter_mut()
+            .find(|x| x.id == id)
+            .unwrap()
+            .check()
+            .await
     }
 
     pub async fn check_all(&mut self) {
         for node in &mut self.nodes {
-            node.check().await;
+            _ = node.check().await;
         }
     }
 }
@@ -60,7 +83,7 @@ mod tests {
         [
         {
             "id":"test",
-            "path": "http://localhost:2461/endb",
+            "path": "http://localhost:2461/endb"
         }
         ]"#;
 
@@ -73,21 +96,22 @@ mod tests {
 
         assert_eq!(checker.status(0), NodeStatus::Down);
     }
+
     #[tokio::test]
     async fn test_check_multiple() {
         let data = r#"
         [
         {
             "id":"test1",
-            "path": "http://localhost:2461/endb",
+            "path": "http://localhost:2461/endb"
         },
         {
             "id":"test2",
-            "path": "https://google.com",
+            "path": "https://google.com"
         },
         {
             "id":"test3",
-            "path": "http://osdfsdfksdf.comasdas",
+            "path": "http://osdfsdfksdf.comasdas"
         }
         ]"#;
 
@@ -99,8 +123,8 @@ mod tests {
         assert_eq!(checker.status(1), NodeStatus::Healthy);
         assert_eq!(checker.status(2), NodeStatus::Down);
 
-        assert_eq!(checker.status_by_id("test1"), NodeStatus::Down);
-        assert_eq!(checker.status_by_id("test2"), NodeStatus::Healthy);
-        assert_eq!(checker.status_by_id("test3"), NodeStatus::Down);
+        assert_eq!(checker.status_by_id("test1").unwrap(), NodeStatus::Down);
+        assert_eq!(checker.status_by_id("test2").unwrap(), NodeStatus::Healthy);
+        assert_eq!(checker.status_by_id("test3").unwrap(), NodeStatus::Down);
     }
 }

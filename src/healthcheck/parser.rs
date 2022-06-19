@@ -15,13 +15,13 @@ mod tests {
         let data = r#"
         [
         {
-            "path": "http://localhost:2461/endb",
+            "path": "http://localhost:2461/endb"
         },
         {
-            "path": "https://google.com/",
+            "path": "https://google.com/"
         },
         {
-            "path": "http://osdfsdfksdf.comasdas",
+            "path": "http://osdfsdfksdf.comasdas"
         }
         ]"#
         .to_string();

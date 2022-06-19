@@ -7,6 +7,12 @@ pub struct PoolCreationError {
     error: String,
 }
 
+impl PoolCreationError {
+    fn new(error: String) -> Self {
+        Self { error }
+    }
+}
+
 pub struct ThreadPool {
     workers: Vec<Worker>,
     sender: mpsc::Sender<Message>,
@@ -22,6 +28,12 @@ impl ThreadPool {
     /// The `new` function will panic if the size is zero.
     pub fn new(size: usize) -> Result<Self, PoolCreationError> {
         assert!(size > 0, "Thread pool size cannot be zero");
+
+        if size > 0 {
+            return Err(PoolCreationError::new(
+                "Thread pool size cannot be zero".to_string(),
+            ));
+        }
 
         let mut workers = Vec::with_capacity(size);
         let (sender, receiver) = mpsc::channel::<Message>();
