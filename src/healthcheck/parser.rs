@@ -15,21 +15,21 @@ mod tests {
         let data = r#"
         [
         {
-            "path": "http://localhost:2461/endb"
+            "url": "http://localhost:2461/endb"
         },
         {
-            "path": "https://google.com/"
+            "url": "https://google.com/"
         },
         {
-            "path": "http://osdfsdfksdf.comasdas"
+            "url": "http://osdfsdfksdf.comasdas"
         }
         ]"#
         .to_string();
 
         let parsed = parse_config(data).unwrap();
 
-        assert!(parsed[0]["path"].as_str().unwrap() == "http://localhost:2461/endb");
-        assert!(parsed[1]["path"].as_str().unwrap() == "https://google.com/");
-        assert!(parsed[2]["path"].as_str().unwrap() == "http://osdfsdfksdf.comasdas");
+        assert!(parsed[0]["url"].as_str().unwrap() == "http://localhost:2461/endb");
+        assert!(parsed[1]["url"].as_str().unwrap() == "https://google.com/");
+        assert!(parsed[2]["url"].as_str().unwrap() == "http://osdfsdfksdf.comasdas");
     }
 }

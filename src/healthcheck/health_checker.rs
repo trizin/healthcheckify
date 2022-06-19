@@ -18,7 +18,7 @@ impl HealthChecker {
 
         let mut nodes: Vec<Node> = Vec::with_capacity(node_configs.len());
         for config in node_configs.iter() {
-            let node_config = NodeConfig::new(config["path"].as_str().unwrap().trim().to_string());
+            let node_config = NodeConfig::new(config["url"].as_str().unwrap().trim().to_string());
             let id = config["id"].as_str().unwrap();
             let timeout = config["timeout"].as_u64().unwrap_or(10u64) as u32;
             let strategy = match config["strategy"].as_str().unwrap_or("statuscode") {
@@ -78,7 +78,7 @@ mod tests {
         [
         {
             "id":"test",
-            "path": "http://localhost:2461/endb"
+            "url": "http://localhost:2461/endb"
         }
         ]"#;
 
@@ -98,15 +98,15 @@ mod tests {
         [
         {
             "id":"test1",
-            "path": "http://localhost:2461/endb"
+            "url": "http://localhost:2461/endb"
         },
         {
             "id":"test2",
-            "path": "https://google.com"
+            "url": "https://google.com"
         },
         {
             "id":"test3",
-            "path": "http://osdfsdfksdf.comasdas"
+            "url": "http://osdfsdfksdf.comasdas"
         }
         ]"#;
 
@@ -129,7 +129,7 @@ mod tests {
         [
         {
             "id":"test1",
-            "path": "https://cheat.sh/",
+            "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"The only cheat sheet",
             "timeout": "statuscode"
@@ -149,7 +149,7 @@ mod tests {
         [
         {
             "id":"test1",
-            "path": "https://cheat.sh/",
+            "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"SOME RANDOM STUFF",
             "timeout": "statuscode"
