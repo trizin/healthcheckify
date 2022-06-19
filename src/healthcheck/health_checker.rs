@@ -127,4 +127,5 @@ mod tests {
         assert_eq!(checker.status_by_id("test2").unwrap(), NodeStatus::Healthy);
         assert_eq!(checker.status_by_id("test3").unwrap(), NodeStatus::Down);
     }
+
 }
