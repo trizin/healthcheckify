@@ -18,14 +18,14 @@ pub async fn handle_connection(mut stream: TcpStream, health_checker: Arc<Mutex<
     let path = &path[1].replace('"', "");
     health_checker.lock().unwrap().check_all().await;
 
-    let stat = health_checker.lock().unwrap().status_by_id(path);
+    let stat = health_checker.lock().unwrap().check_by_id(path).await;
 
     let response = match stat {
-        Some(stat) if stat == NodeStatus::Down => get_response("error", 500),
-        Some(stat) if stat == NodeStatus::Healthy => get_response("ok", 200),
-        Some(stat) if stat == NodeStatus::Processing => get_response("ok", 200),
-        Some(_) => get_response("not found", 404),
-        None => get_response("not found", 404),
+        Ok(stat) if stat == NodeStatus::Down => get_response("error", 500),
+        Ok(stat) if stat == NodeStatus::Healthy => get_response("ok", 200),
+        Ok(stat) if stat == NodeStatus::Processing => get_response("ok", 200),
+        Ok(_) => get_response("not found", 404),
+        Err(_) => get_response("not found", 404),
     };
 
     stream.write_all(&response).unwrap();
