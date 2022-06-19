@@ -56,7 +56,10 @@ impl HealthChecker {
     }
 
     pub fn check_by_id(&mut self, id: &str) -> Result<NodeStatus, Box<dyn Error>> {
-        self.nodes.iter_mut().find(|x| x.id == id).unwrap().check()
+        match self.nodes.iter_mut().find(|x| x.id == id) {
+            Some(x) => x.check(),
+            None => Err("Cannot find node".into()),
+        }
     }
 
     pub fn check_all(&mut self) {
