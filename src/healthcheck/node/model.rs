@@ -53,7 +53,7 @@ impl Node {
             < self.timeout.into()
         {
             // check every 10 seconds
-            return Err("Using cached value".into());
+            return Ok(self.status());
         }
 
         self.status = NodeStatus::Processing;
