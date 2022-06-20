@@ -1,18 +1,7 @@
 use crate::thread::worker::Message;
 use crate::thread::worker::Worker;
+use std::error::Error;
 use std::sync::{mpsc, Arc, Mutex};
-
-#[derive(Debug)]
-pub struct PoolCreationError {
-    error: String,
-}
-
-impl PoolCreationError {
-    fn new(error: String) -> Self {
-        Self { error }
-    }
-}
-
 pub struct ThreadPool {
     workers: Vec<Worker>,
     sender: mpsc::Sender<Message>,
@@ -26,11 +15,9 @@ impl ThreadPool {
     /// # Panics
     ///
     /// The `new` function will panic if the size is zero.
-    pub fn new(size: usize) -> Result<Self, PoolCreationError> {
+    pub fn new(size: usize) -> Result<Self, Box<dyn Error>> {
         if size < 1 {
-            return Err(PoolCreationError::new(
-                "Thread pool size cannot be zero".to_string(),
-            ));
+            return Err("Thread pool size cannot be zero".into());
         }
 
         let mut workers = Vec::with_capacity(size);
