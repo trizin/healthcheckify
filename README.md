@@ -1,6 +1,6 @@
 # Service Health Checker
 
-Sends GET request to the server's health check endpoints and looks for the correct response code or body.
+Sends GET request to the service's health check endpoints and looks for the correct response code or body.
 
 ## Usage
 
