@@ -1,6 +1,6 @@
 # Service Health Checker
 
-Sends GET request to the server's health check endpoints and looks for the correct response code or body.
+Sends GET request to the service's health check endpoints and looks for the correct response code or body.
 
 ## Usage
 
@@ -60,4 +60,4 @@ Example config file:
 To query a service's status. Send a get request to:
 `GET http://{BIND_ADDRESS}/{NODE_ID}`
 
-If the service is down, the server will return response with code 500. Otherwise, the server will return a response with code 200.
+If the service is down, the server will respond with code 500. Otherwise, the server will respond with code 200.
