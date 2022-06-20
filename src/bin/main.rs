@@ -32,7 +32,9 @@ fn main() {
         let hc_copy = Arc::clone(&hc);
 
         pool.execute(|| {
-            handle_connection(stream, hc_copy);
+            if let Err(err) = handle_connection(stream, hc_copy) {
+                println!("An error occured {}", err)
+            }
         })
     }
 }
