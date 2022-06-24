@@ -40,6 +40,14 @@ impl HealthChecker {
         Self { nodes }
     }
 
+    pub fn get_node_ids(&self) -> Vec<String> {
+        let mut ids: Vec<String> = Vec::with_capacity(self.nodes.len());
+        for node in self.nodes.iter() {
+            ids.push(node.id.clone());
+        }
+        ids
+    }
+
     pub fn status(&self, u: usize) -> NodeStatus {
         self.nodes[u].status()
     }

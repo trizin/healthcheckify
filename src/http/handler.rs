@@ -19,7 +19,7 @@ pub fn handle_connection(
     let re = Regex::new("GET /(.*) HTTP")?;
     let path = re.captures(&text);
     if let Some(_path) = path {
-        if _path.len() > 1 {
+        if _path.len() > 1 && !&_path[1].is_empty() {
             let path = &_path[1].replace('"', "");
             let stat = health_checker.lock().unwrap().check_by_id(path);
 
@@ -31,6 +31,29 @@ pub fn handle_connection(
                 Err(_) => get_response("not found", 404),
             };
 
+            Write::write(&mut stream, &response)?;
+            stream.flush()?;
+
+            return Ok(());
+        } else {
+            let mut response = String::from("");
+            health_checker.lock().unwrap().check_all();
+            let ids = health_checker.lock().unwrap().get_node_ids();
+            for node_id in ids {
+                response += &format!("{}: ", node_id);
+
+                let stat = health_checker.lock().unwrap().status_by_id(&node_id);
+
+                let answer = match stat {
+                    Some(stat) if stat == NodeStatus::Down => format!("{}\n", "down"),
+                    Some(stat) if stat == NodeStatus::Healthy => format!("{}\n", "healthy"),
+                    Some(stat) if stat == NodeStatus::Processing => format!("{}\n", "processing"),
+                    _ => format!("{}\n", "error"),
+                };
+
+                response += &answer;
+            }
+            let response = get_response(&response, 200);
             Write::write(&mut stream, &response)?;
             stream.flush()?;
 
