@@ -19,7 +19,7 @@ fn main() {
         .parse::<usize>()
         .unwrap();
 
-    let config_file = read_to_string("./config.json").unwrap();
+    let config_file = read_to_string("./config.json").except("Couldn't find the config file.");
     let health_checker = HealthChecker::new(config_file);
     let pool = ThreadPool::new(thread_count).unwrap();
 
