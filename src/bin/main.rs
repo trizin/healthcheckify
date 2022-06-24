@@ -1,29 +1,19 @@
-use std::{
-    env,
-    fs::read_to_string,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use healthchecker::{
+    config::config::AppConfig,
     healthcheck::health_checker::HealthChecker,
     http::{handler::handle_connection, listener},
     thread::threadpool::ThreadPool,
 };
 
 fn main() {
-    dotenv::dotenv().ok();
+    let config = AppConfig::new();
 
-    let addr = env::var("BIND_ADDR").unwrap_or_else(|_| String::from("127.0.0.1:8080"));
-    let thread_count = env::var("THREAD_COUNT")
-        .unwrap_or_else(|_| String::from("5"))
-        .parse::<usize>()
-        .unwrap();
+    let health_checker = HealthChecker::new(config.config_file);
+    let pool = ThreadPool::new(config.thread_count).unwrap();
 
-    let config_file = read_to_string("./config.json").except("Couldn't find the config file.");
-    let health_checker = HealthChecker::new(config_file);
-    let pool = ThreadPool::new(thread_count).unwrap();
-
-    let lstnr = listener::listen(&addr).expect("Cannot listen address");
+    let lstnr = listener::listen(&config.addr).expect("Cannot listen address");
 
     let hc = Arc::new(Mutex::new(health_checker));
 
