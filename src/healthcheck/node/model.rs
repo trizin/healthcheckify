@@ -139,6 +139,22 @@ mod tests {
         let _ = node.check();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
+
+    #[test]
+    fn test_post_contains() {
+        let node_config = NodeConfig::new("https://httpbin.org/post".to_string());
+        let mut node = Node::new(
+            node_config,
+            "5".to_string(),
+            NodeCheckStrategy::BodyContains("origin".to_string()),
+            10,
+            RequestMethod::POST,
+        );
+
+        assert_eq!(node.status, NodeStatus::Processing);
+        let _ = node.check();
+        assert_eq!(node.status, NodeStatus::Healthy);
+    }
     #[test]
     fn test_check_success() {
         let node_config = NodeConfig::new("https://google.com".to_string());
