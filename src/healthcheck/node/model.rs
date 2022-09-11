@@ -163,6 +163,7 @@ mod tests {
             "5".to_string(),
             NodeCheckStrategy::StatusCode,
             10,
+            RequestMethod::GET,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -177,6 +178,7 @@ mod tests {
             "5".to_string(),
             NodeCheckStrategy::StatusCode,
             10,
+            RequestMethod::GET,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -192,6 +194,7 @@ mod tests {
             "5".to_string(),
             NodeCheckStrategy::StatusCode,
             100000,
+            RequestMethod::GET,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
