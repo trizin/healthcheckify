@@ -41,12 +41,22 @@ impl HealthChecker {
                 _ => RequestMethod::GET,
             };
 
+            let requestBody = config["requestBody"].as_str().unwrap_or("").to_string();
+            // convert to Option
+            let requestBody = if requestBody.is_empty() {
+                None
+            } else {
+                Some(requestBody)
+            };
+
+
             nodes.push(Node::new(
                 node_config,
                 id.to_string(),
                 strategy,
                 timeout,
                 method,
+                requestBody
             ));
         }
 
