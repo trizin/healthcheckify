@@ -26,6 +26,7 @@ pub(crate) struct Node {
     last_check: SystemTime,
     strategy: NodeCheckStrategy,
     timeout: u32,
+    method: RequestMethod,
 }
 
 impl Node {
