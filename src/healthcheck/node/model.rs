@@ -121,6 +121,7 @@ mod tests {
     use crate::healthcheck::node::config::NodeConfig;
     use crate::healthcheck::node::model::Node;
     use crate::healthcheck::node::model::NodeCheckStrategy;
+    use crate::healthcheck::node::model::RequestMethod;
 
     use super::NodeStatus;
 
@@ -155,6 +156,7 @@ mod tests {
         let _ = node.check();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
+
     #[test]
     fn test_check_success() {
         let node_config = NodeConfig::new("https://google.com".to_string());
