@@ -30,7 +30,13 @@ pub(crate) struct Node {
 }
 
 impl Node {
-    pub fn new(config: NodeConfig, id: String, strategy: NodeCheckStrategy, timeout: u32) -> Self {
+    pub fn new(
+        config: NodeConfig,
+        id: String,
+        strategy: NodeCheckStrategy,
+        timeout: u32,
+        method: RequestMethod,
+    ) -> Self {
         Self {
             id,
             config,
@@ -40,6 +46,7 @@ impl Node {
                 .unwrap(),
             strategy,
             timeout,
+            method,
         }
     }
 
@@ -65,7 +72,17 @@ impl Node {
         }
 
         self.status = NodeStatus::Processing;
-        let request = reqwest::blocking::get(&self.config.url);
+
+        let request = match self.method {
+            RequestMethod::GET => reqwest::blocking::get(&self.config.url),
+            RequestMethod::POST => {
+                let client = reqwest::blocking::Client::new();
+                client
+                    .post("http://httpbin.org/post")
+                    .body("the exact body that is sent")
+                    .send()
+            }
+        };
 
         if let Err(err) = request {
             self.status = NodeStatus::Down;
