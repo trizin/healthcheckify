@@ -2,7 +2,7 @@ use std::error::Error;
 
 use crate::healthcheck::{
     node::model::Node,
-    node::model::{NodeCheckStrategy, NodeStatus},
+    node::model::{NodeCheckStrategy, NodeStatus, RequestMethod},
     parser::parse_config,
 };
 
@@ -31,8 +31,23 @@ impl HealthChecker {
                 }
                 _ => NodeCheckStrategy::StatusCode, // default strategy
             };
+            let lowercase_strategy = config["strategy"]
+                .as_str()
+                .unwrap_or("get")
+                .to_ascii_lowercase();
 
-            nodes.push(Node::new(node_config, id.to_string(), strategy, timeout));
+            let method = match lowercase_strategy.as_str() {
+                "post" => RequestMethod::POST,
+                _ => RequestMethod::GET,
+            };
+
+            nodes.push(Node::new(
+                node_config,
+                id.to_string(),
+                strategy,
+                timeout,
+                method,
+            ));
         }
 
         println!("Health checker loaded with {} nodes", nodes.len());
