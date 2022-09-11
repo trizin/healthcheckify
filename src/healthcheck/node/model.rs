@@ -27,6 +27,7 @@ pub(crate) struct Node {
     strategy: NodeCheckStrategy,
     timeout: u32,
     method: RequestMethod,
+    requestBody: String
 }
 
 impl Node {
@@ -36,7 +37,9 @@ impl Node {
         strategy: NodeCheckStrategy,
         timeout: u32,
         method: RequestMethod,
+        requestBody: Option<String>
     ) -> Self {
+        let requestBody = requestBody.unwrap_or("".to_string());
         Self {
             id,
             config,
@@ -47,6 +50,7 @@ impl Node {
             strategy,
             timeout,
             method,
+            requestBody
         }
     }
 
@@ -78,8 +82,7 @@ impl Node {
             RequestMethod::POST => {
                 let client = reqwest::blocking::Client::new();
                 client
-                    .post("http://httpbin.org/post")
-                    .body("the exact body that is sent")
+                    .post("http://httpbin.org/post").body(self.requestBody.clone())
                     .send()
             }
         };
@@ -134,6 +137,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             10,
             RequestMethod::POST,
+            None
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -150,6 +154,7 @@ mod tests {
             NodeCheckStrategy::BodyContains("origin".to_string()),
             10,
             RequestMethod::POST,
+            None
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -166,6 +171,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             10,
             RequestMethod::GET,
+            None
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -181,6 +187,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             10,
             RequestMethod::GET,
+            None
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -197,6 +204,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             100000,
             RequestMethod::GET,
+            None
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
