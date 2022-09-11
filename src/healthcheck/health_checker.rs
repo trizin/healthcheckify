@@ -143,7 +143,7 @@ mod tests {
             "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"The only cheat sheet",
-            "timeout": "statuscode"
+            "timeout": 10
         }
         ]"#;
 
@@ -163,7 +163,7 @@ mod tests {
             "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"SOME RANDOM STUFF",
-            "timeout": "statuscode"
+            "timeout": 10
         }
         ]"#;
 
