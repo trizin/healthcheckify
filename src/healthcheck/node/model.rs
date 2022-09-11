@@ -14,6 +14,11 @@ pub enum NodeCheckStrategy {
     StatusCode,
 }
 
+pub enum RequestMethod {
+    POST,
+    GET,
+}
+
 pub(crate) struct Node {
     pub id: String,
     config: NodeConfig,
