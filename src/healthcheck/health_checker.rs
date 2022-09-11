@@ -41,12 +41,12 @@ impl HealthChecker {
                 _ => RequestMethod::GET,
             };
 
-            let requestBody = config["requestBody"].as_str().unwrap_or("").to_string();
+            let request_body = config["requestBody"].as_str().unwrap_or("").to_string();
             // convert to Option
-            let requestBody = if requestBody.is_empty() {
+            let request_body = if request_body.is_empty() {
                 None
             } else {
-                Some(requestBody)
+                Some(request_body)
             };
 
 
@@ -56,7 +56,7 @@ impl HealthChecker {
                 strategy,
                 timeout,
                 method,
-                requestBody
+                request_body
             ));
         }
 

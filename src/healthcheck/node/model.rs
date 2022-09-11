@@ -27,7 +27,7 @@ pub(crate) struct Node {
     strategy: NodeCheckStrategy,
     timeout: u32,
     method: RequestMethod,
-    requestBody: String
+    request_body: String
 }
 
 impl Node {
@@ -37,9 +37,9 @@ impl Node {
         strategy: NodeCheckStrategy,
         timeout: u32,
         method: RequestMethod,
-        requestBody: Option<String>
+        request_body: Option<String>
     ) -> Self {
-        let requestBody = requestBody.unwrap_or("".to_string());
+        let request_body = request_body.unwrap_or("".to_string());
         Self {
             id,
             config,
@@ -50,7 +50,7 @@ impl Node {
             strategy,
             timeout,
             method,
-            requestBody
+            request_body
         }
     }
 
@@ -82,7 +82,7 @@ impl Node {
             RequestMethod::POST => {
                 let client = reqwest::blocking::Client::new();
                 client
-                    .post("http://httpbin.org/post").body(self.requestBody.clone())
+                    .post("http://httpbin.org/post").body(self.request_body.clone())
                     .send()
             }
         };
