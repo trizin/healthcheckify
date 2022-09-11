@@ -31,7 +31,7 @@ impl HealthChecker {
                 }
                 _ => NodeCheckStrategy::StatusCode, // default strategy
             };
-            let lowercase_strategy = config["strategy"]
+            let lowercase_strategy = config["method"]
                 .as_str()
                 .unwrap_or("get")
                 .to_ascii_lowercase();
