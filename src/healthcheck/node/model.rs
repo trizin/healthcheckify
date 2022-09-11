@@ -82,7 +82,7 @@ impl Node {
             RequestMethod::POST => {
                 let client = reqwest::blocking::Client::new();
                 client
-                    .post("http://httpbin.org/post").body(self.request_body.clone())
+                    .post(&self.config.url).body(self.request_body.clone())
                     .send()
             }
         };
@@ -93,7 +93,8 @@ impl Node {
         }
 
         let response = request.unwrap();
-
+        println!("{:?}", response);
+        
         match &self.strategy {
             NodeCheckStrategy::StatusCode => {
                 let status_code = response.status();
