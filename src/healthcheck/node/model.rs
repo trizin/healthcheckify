@@ -93,8 +93,6 @@ impl Node {
         }
 
         let response = request.unwrap();
-        println!("{:?}", response);
-        
         match &self.strategy {
             NodeCheckStrategy::StatusCode => {
                 let status_code = response.status();
