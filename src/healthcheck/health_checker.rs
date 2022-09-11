@@ -189,4 +189,25 @@ mod tests {
         assert_eq!(checker.status(0), NodeStatus::Down);
         assert_eq!(checker.status_by_id("test1").unwrap(), NodeStatus::Down);
     }
+
+    #[test]
+    fn test_post_method(){
+        let data = r#"
+        [
+        {
+            "id":"test1",
+            "url": "http://httpbin.org/post",
+            "method": "post",
+            "timeout": 10,
+            "strategy": "stringcontains",
+            "strategy_string":"origin"
+        }
+        ]"#;
+
+        let mut checker = HealthChecker::new(data.to_string());
+
+        _ = checker.check_by_id("test1");
+
+        assert_eq!(checker.status(0), NodeStatus::Healthy);
+    }
 }
