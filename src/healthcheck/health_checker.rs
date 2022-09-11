@@ -49,14 +49,13 @@ impl HealthChecker {
                 Some(request_body)
             };
 
-
             nodes.push(Node::new(
                 node_config,
                 id.to_string(),
                 strategy,
                 timeout,
                 method,
-                request_body
+                request_body,
             ));
         }
 
@@ -201,7 +200,7 @@ mod tests {
     }
 
     #[test]
-    fn test_post_method(){
+    fn test_post_method() {
         let data = r#"
         [
         {

@@ -27,7 +27,7 @@ pub(crate) struct Node {
     strategy: NodeCheckStrategy,
     timeout: u32,
     method: RequestMethod,
-    request_body: String
+    request_body: String,
 }
 
 impl Node {
@@ -37,7 +37,7 @@ impl Node {
         strategy: NodeCheckStrategy,
         timeout: u32,
         method: RequestMethod,
-        request_body: Option<String>
+        request_body: Option<String>,
     ) -> Self {
         let request_body = request_body.unwrap_or("".to_string());
         Self {
@@ -50,7 +50,7 @@ impl Node {
             strategy,
             timeout,
             method,
-            request_body
+            request_body,
         }
     }
 
@@ -82,7 +82,8 @@ impl Node {
             RequestMethod::POST => {
                 let client = reqwest::blocking::Client::new();
                 client
-                    .post(&self.config.url).body(self.request_body.clone())
+                    .post(&self.config.url)
+                    .body(self.request_body.clone())
                     .send()
             }
         };
@@ -136,7 +137,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             10,
             RequestMethod::POST,
-            None
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -153,7 +154,7 @@ mod tests {
             NodeCheckStrategy::BodyContains("origin".to_string()),
             10,
             RequestMethod::POST,
-            None
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -170,7 +171,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             10,
             RequestMethod::GET,
-            None
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -186,7 +187,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             10,
             RequestMethod::GET,
-            None
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -203,7 +204,7 @@ mod tests {
             NodeCheckStrategy::StatusCode,
             100000,
             RequestMethod::GET,
-            None
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
