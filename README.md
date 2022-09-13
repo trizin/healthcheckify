@@ -52,7 +52,7 @@ Example config file:
     "url": "http://localhost:3001/check",
     "strategy": "stringcontains",
     "strategy_string": "success",
-    "timeout": 10,
+    "interval": 10,
     "method": "POST",
     "call_timeout": 5
   }
