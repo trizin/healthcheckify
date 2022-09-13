@@ -1,10 +1,10 @@
 # Service Health Checker
 
-Sends GET request to the service's health check endpoints and looks for the correct response code or body.
+Sends GET or POST request to the node's health check endpoints and looks for the correct response code or body.
 
 ## Usage
 
-Create a `config.json` file and a `.env` within the same directory of `rhealthchecker`.
+Create a `config.json` and a `.env` file in the root directory of the project.
 
 ### Set up env vars
 - `BIND_ADDR`
@@ -24,6 +24,8 @@ Config file is an array of service configurations.
 - `strategy` : health check strategy, either `statuscode` or `stringcontains`. Default is `statuscode`.
 - `strategy_string` : the string to look for in the response body, required if the strategy is set to `stringcontains`
 - `timeout` : health check interval in seconds. Default is 10 seconds.
+- `call_timeout` : timeout for the HTTP request in seconds. Default is 30 seconds.
+- `method` : HTTP method to use. Default is `GET`. Options are `GET`, `POST`.
 
 
 Example service configuration:
@@ -50,7 +52,9 @@ Example config file:
     "url": "http://localhost:3001/check",
     "strategy": "stringcontains",
     "strategy_string": "success",
-    "interval": 10
+    "timeout": 10,
+    "method": "POST",
+    "call_timeout": 5
   }
 ]
 ```
@@ -61,3 +65,6 @@ To query a service's status. Send a get request to:
 `GET http://{BIND_ADDRESS}/{NODE_ID}`
 
 If the service is down, the server will respond with code 500. Otherwise, the server will respond with code 200.
+
+To query all services' status, send a get request to the root endpoint:
+`GET http://{BIND_ADDRESS}`
