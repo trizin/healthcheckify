@@ -20,7 +20,7 @@ impl HealthChecker {
         for config in node_configs.iter() {
             let node_config = NodeConfig::new(config["url"].as_str().unwrap().trim().to_string());
             let id = config["id"].as_str().unwrap();
-            let timeout = config["timeout"].as_u64().unwrap_or(10u64);
+            let timeout = config["interval"].as_u64().unwrap_or(10u64);
             let strategy = match config["strategy"].as_str().unwrap_or("statuscode") {
                 "stringcontains" => {
                     let _contains_string = config["strategy_string"]
@@ -170,7 +170,7 @@ mod tests {
             "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"The only cheat sheet",
-            "timeout": 10
+            "interval": 10
         }
         ]"#;
 
@@ -190,7 +190,7 @@ mod tests {
             "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"SOME RANDOM STUFF",
-            "timeout": 10
+            "interval": 10
         }
         ]"#;
 
@@ -210,7 +210,7 @@ mod tests {
             "id":"test1",
             "url": "http://httpbin.org/post",
             "method": "post",
-            "timeout": 10,
+            "interval": 10,
             "strategy": "stringcontains",
             "strategy_string":"origin"
         }
