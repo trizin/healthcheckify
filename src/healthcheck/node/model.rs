@@ -221,4 +221,23 @@ mod tests {
         let _ = node.check();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
+
+    #[test]
+    fn test_timeout() {
+        let node_config = NodeConfig::new("https://httpbin.org/delay/2".to_string());
+        let mut node = Node::new(
+            node_config,
+            "5".to_string(),
+            NodeCheckStrategy::StatusCode,
+            10,
+            RequestMethod::GET,
+            None,
+            1,
+        );
+
+        assert_eq!(node.status, NodeStatus::Processing);
+        let val = node.check();
+        println!("{:?}", val);
+        assert_eq!(node.status, NodeStatus::Down);
+    }
 }
