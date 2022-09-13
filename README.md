@@ -34,7 +34,7 @@ Example service configuration:
   "id": "my_service",
   "url": "http://localhost:3000/check",
   "strategy": "statuscode",
-  "timeout": 10
+  "interval": 10
 }
 ```
 
@@ -45,14 +45,14 @@ Example config file:
     "id": "my_service_1",
     "url": "http://localhost:3000/check",
     "strategy": "statuscode",
-    "timeout": 10
+    "interval": 10
   },
   {
     "id": "my_service_2",
     "url": "http://localhost:3001/check",
     "strategy": "stringcontains",
     "strategy_string": "success",
-    "timeout": 10,
+    "interval": 10,
     "method": "POST",
     "call_timeout": 5
   }
