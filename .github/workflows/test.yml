@@ -20,4 +20,4 @@ jobs:
           command: test
       - uses: actions-rs/cargo@v1
         with:
-          command: cargo fmt --all --check
+          command: fmt --all --check
