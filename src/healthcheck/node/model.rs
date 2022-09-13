@@ -25,9 +25,10 @@ pub(crate) struct Node {
     status: NodeStatus,
     last_check: SystemTime,
     strategy: NodeCheckStrategy,
-    timeout: u32,
+    timeout: u64,
     method: RequestMethod,
     request_body: String,
+    call_timeout: u64,
 }
 
 impl Node {
@@ -35,9 +36,10 @@ impl Node {
         config: NodeConfig,
         id: String,
         strategy: NodeCheckStrategy,
-        timeout: u32,
+        timeout: u64,
         method: RequestMethod,
         request_body: Option<String>,
+        call_timeout: u64,
     ) -> Self {
         let request_body = request_body.unwrap_or("".to_string());
         Self {
@@ -45,12 +47,13 @@ impl Node {
             config,
             status: NodeStatus::Processing,
             last_check: SystemTime::now()
-                .checked_sub(Duration::from_secs(timeout as u64 + 10))
+                .checked_sub(Duration::from_secs(timeout + 10))
                 .unwrap(),
             strategy,
             timeout,
             method,
             request_body,
+            call_timeout,
         }
     }
 
@@ -69,7 +72,7 @@ impl Node {
             .unwrap_err()
             .duration()
             .as_secs()
-            < self.timeout.into()
+            < self.timeout
         {
             // check every 10 seconds
             return Ok(self.status());
@@ -77,14 +80,16 @@ impl Node {
 
         self.status = NodeStatus::Processing;
 
-        let request = match self.method {
-            RequestMethod::GET => reqwest::blocking::get(&self.config.url),
-            RequestMethod::POST => {
-                let client = reqwest::blocking::Client::new();
-                client
+        let request = {
+            let client = reqwest::blocking::Client::builder()
+                .timeout(Duration::from_secs(self.call_timeout))
+                .build()?;
+            match self.method {
+                RequestMethod::GET => client.get(&self.config.url).send(),
+                RequestMethod::POST => client
                     .post(&self.config.url)
                     .body(self.request_body.clone())
-                    .send()
+                    .send(),
             }
         };
 
@@ -138,6 +143,7 @@ mod tests {
             10,
             RequestMethod::POST,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -155,6 +161,7 @@ mod tests {
             10,
             RequestMethod::POST,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -172,6 +179,7 @@ mod tests {
             10,
             RequestMethod::GET,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -188,6 +196,7 @@ mod tests {
             10,
             RequestMethod::GET,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -205,10 +214,30 @@ mod tests {
             100000,
             RequestMethod::GET,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
         let _ = node.check();
         assert_eq!(node.status, NodeStatus::Healthy);
+    }
+
+    #[test]
+    fn test_timeout() {
+        let node_config = NodeConfig::new("https://httpbin.org/delay/2".to_string());
+        let mut node = Node::new(
+            node_config,
+            "5".to_string(),
+            NodeCheckStrategy::StatusCode,
+            10,
+            RequestMethod::GET,
+            None,
+            1,
+        );
+
+        assert_eq!(node.status, NodeStatus::Processing);
+        let val = node.check();
+        println!("{:?}", val);
+        assert_eq!(node.status, NodeStatus::Down);
     }
 }

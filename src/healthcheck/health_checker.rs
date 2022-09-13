@@ -20,7 +20,7 @@ impl HealthChecker {
         for config in node_configs.iter() {
             let node_config = NodeConfig::new(config["url"].as_str().unwrap().trim().to_string());
             let id = config["id"].as_str().unwrap();
-            let timeout = config["timeout"].as_u64().unwrap_or(10u64) as u32;
+            let timeout = config["timeout"].as_u64().unwrap_or(10u64);
             let strategy = match config["strategy"].as_str().unwrap_or("statuscode") {
                 "stringcontains" => {
                     let _contains_string = config["strategy_string"]
@@ -49,6 +49,8 @@ impl HealthChecker {
                 Some(request_body)
             };
 
+            let call_timeout = config["callTimeout"].as_u64().unwrap_or(30u64);
+
             nodes.push(Node::new(
                 node_config,
                 id.to_string(),
@@ -56,6 +58,7 @@ impl HealthChecker {
                 timeout,
                 method,
                 request_body,
+                call_timeout,
             ));
         }
 
