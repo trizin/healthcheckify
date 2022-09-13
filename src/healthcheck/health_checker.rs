@@ -2,7 +2,7 @@ use std::error::Error;
 
 use crate::healthcheck::{
     node::model::Node,
-    node::model::{NodeCheckStrategy, NodeStatus},
+    node::model::{NodeCheckStrategy, NodeStatus, RequestMethod},
     parser::parse_config,
 };
 
@@ -31,8 +31,32 @@ impl HealthChecker {
                 }
                 _ => NodeCheckStrategy::StatusCode, // default strategy
             };
+            let lowercase_strategy = config["method"]
+                .as_str()
+                .unwrap_or("get")
+                .to_ascii_lowercase();
 
-            nodes.push(Node::new(node_config, id.to_string(), strategy, timeout));
+            let method = match lowercase_strategy.as_str() {
+                "post" => RequestMethod::POST,
+                _ => RequestMethod::GET,
+            };
+
+            let request_body = config["requestBody"].as_str().unwrap_or("").to_string();
+            // convert to Option
+            let request_body = if request_body.is_empty() {
+                None
+            } else {
+                Some(request_body)
+            };
+
+            nodes.push(Node::new(
+                node_config,
+                id.to_string(),
+                strategy,
+                timeout,
+                method,
+                request_body,
+            ));
         }
 
         println!("Health checker loaded with {} nodes", nodes.len());
@@ -143,7 +167,7 @@ mod tests {
             "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"The only cheat sheet",
-            "timeout": "statuscode"
+            "timeout": 10
         }
         ]"#;
 
@@ -163,7 +187,7 @@ mod tests {
             "url": "https://cheat.sh/",
             "strategy": "stringcontains",
             "strategy_string":"SOME RANDOM STUFF",
-            "timeout": "statuscode"
+            "timeout": 10
         }
         ]"#;
 
@@ -173,5 +197,26 @@ mod tests {
 
         assert_eq!(checker.status(0), NodeStatus::Down);
         assert_eq!(checker.status_by_id("test1").unwrap(), NodeStatus::Down);
+    }
+
+    #[test]
+    fn test_post_method() {
+        let data = r#"
+        [
+        {
+            "id":"test1",
+            "url": "http://httpbin.org/post",
+            "method": "post",
+            "timeout": 10,
+            "strategy": "stringcontains",
+            "strategy_string":"origin"
+        }
+        ]"#;
+
+        let mut checker = HealthChecker::new(data.to_string());
+
+        _ = checker.check_by_id("test1");
+
+        assert_eq!(checker.status(0), NodeStatus::Healthy);
     }
 }

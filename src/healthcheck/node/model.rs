@@ -14,6 +14,11 @@ pub enum NodeCheckStrategy {
     StatusCode,
 }
 
+pub enum RequestMethod {
+    POST,
+    GET,
+}
+
 pub(crate) struct Node {
     pub id: String,
     config: NodeConfig,
@@ -21,10 +26,20 @@ pub(crate) struct Node {
     last_check: SystemTime,
     strategy: NodeCheckStrategy,
     timeout: u32,
+    method: RequestMethod,
+    request_body: String,
 }
 
 impl Node {
-    pub fn new(config: NodeConfig, id: String, strategy: NodeCheckStrategy, timeout: u32) -> Self {
+    pub fn new(
+        config: NodeConfig,
+        id: String,
+        strategy: NodeCheckStrategy,
+        timeout: u32,
+        method: RequestMethod,
+        request_body: Option<String>,
+    ) -> Self {
+        let request_body = request_body.unwrap_or("".to_string());
         Self {
             id,
             config,
@@ -34,6 +49,8 @@ impl Node {
                 .unwrap(),
             strategy,
             timeout,
+            method,
+            request_body,
         }
     }
 
@@ -59,7 +76,17 @@ impl Node {
         }
 
         self.status = NodeStatus::Processing;
-        let request = reqwest::blocking::get(&self.config.url);
+
+        let request = match self.method {
+            RequestMethod::GET => reqwest::blocking::get(&self.config.url),
+            RequestMethod::POST => {
+                let client = reqwest::blocking::Client::new();
+                client
+                    .post(&self.config.url)
+                    .body(self.request_body.clone())
+                    .send()
+            }
+        };
 
         if let Err(err) = request {
             self.status = NodeStatus::Down;
@@ -67,7 +94,6 @@ impl Node {
         }
 
         let response = request.unwrap();
-
         match &self.strategy {
             NodeCheckStrategy::StatusCode => {
                 let status_code = response.status();
@@ -98,8 +124,43 @@ mod tests {
     use crate::healthcheck::node::config::NodeConfig;
     use crate::healthcheck::node::model::Node;
     use crate::healthcheck::node::model::NodeCheckStrategy;
+    use crate::healthcheck::node::model::RequestMethod;
 
     use super::NodeStatus;
+
+    #[test]
+    fn test_post_statuscode() {
+        let node_config = NodeConfig::new("https://httpbin.org/post".to_string());
+        let mut node = Node::new(
+            node_config,
+            "5".to_string(),
+            NodeCheckStrategy::StatusCode,
+            10,
+            RequestMethod::POST,
+            None,
+        );
+
+        assert_eq!(node.status, NodeStatus::Processing);
+        let _ = node.check();
+        assert_eq!(node.status, NodeStatus::Healthy);
+    }
+
+    #[test]
+    fn test_post_contains() {
+        let node_config = NodeConfig::new("https://httpbin.org/post".to_string());
+        let mut node = Node::new(
+            node_config,
+            "5".to_string(),
+            NodeCheckStrategy::BodyContains("origin".to_string()),
+            10,
+            RequestMethod::POST,
+            None,
+        );
+
+        assert_eq!(node.status, NodeStatus::Processing);
+        let _ = node.check();
+        assert_eq!(node.status, NodeStatus::Healthy);
+    }
 
     #[test]
     fn test_check_success() {
@@ -109,6 +170,8 @@ mod tests {
             "5".to_string(),
             NodeCheckStrategy::StatusCode,
             10,
+            RequestMethod::GET,
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -123,6 +186,8 @@ mod tests {
             "5".to_string(),
             NodeCheckStrategy::StatusCode,
             10,
+            RequestMethod::GET,
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -138,6 +203,8 @@ mod tests {
             "5".to_string(),
             NodeCheckStrategy::StatusCode,
             100000,
+            RequestMethod::GET,
+            None,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
