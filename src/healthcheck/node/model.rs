@@ -143,6 +143,7 @@ mod tests {
             10,
             RequestMethod::POST,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -160,6 +161,7 @@ mod tests {
             10,
             RequestMethod::POST,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -177,6 +179,7 @@ mod tests {
             10,
             RequestMethod::GET,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -193,6 +196,7 @@ mod tests {
             10,
             RequestMethod::GET,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
@@ -210,6 +214,7 @@ mod tests {
             100000,
             RequestMethod::GET,
             None,
+            30,
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
