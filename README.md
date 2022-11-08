@@ -23,7 +23,7 @@ Config file is an array of service configurations.
 - `url` : the url which the request will be sent to
 - `strategy` : health check strategy, either `statuscode` or `stringcontains`. Default is `statuscode`.
 - `strategy_string` : the string to look for in the response body, required if the strategy is set to `stringcontains`
-- `timeout` : health check interval in seconds. Default is 10 seconds.
+- `interval` : health check interval in seconds. Default is 10 seconds.
 - `call_timeout` : timeout for the HTTP request in seconds. Default is 30 seconds.
 - `method` : HTTP method to use. Default is `GET`. Options are `GET`, `POST`.
 
