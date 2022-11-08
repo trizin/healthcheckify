@@ -9,10 +9,7 @@ env:
   RELEASE_BIN: rhealth
   RELEASE_DIR: artifacts
   GITHUB_REF: '${{ github.ref }}'
-  WINDOWS_TARGET: x86_64-pc-windows-msvc
-  MACOS_TARGET: x86_64-apple-darwin
-  LINUX_AMD64_TARGET: x86_64-unknown-linux-musl
-  LINUX_ARM64_TARGET: aarch64-unknown-linux-musl
+  LINUX_AMD64_TARGET: x86_64-linux
 
 jobs:
   build:
@@ -23,15 +20,6 @@ jobs:
         include:
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
-            rust: stable
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            rust: stable
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            rust: stable
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
             rust: stable
 
     steps:
@@ -52,7 +40,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update -y
-          sudo apt-get install clang gcc-aarch64-linux-gnu -y
+          sudo apt-get install clang gcc-aarch64-linux-gnu libssl-dev pkg-config build-essential libudev-dev -y
           echo "TARGET_CC=clang" >> $GITHUB_ENV
           echo "CFLAGS_aarch64_unknown_linux_musl=--sysroot=/usr/aarch64-linux-gnu" >> $GITHUB_ENV
           echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=/usr/aarch64-linux-gnu/bin/ld" >> $GITHUB_ENV
@@ -60,11 +48,8 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: brew install p7zip
 
-      - name: Add rustup target
-        run: rustup target add ${{ matrix.target }}
-
       - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release 
 
       - name: Set RUSTFLAGS (Windows)
         if: matrix.os == 'windows-latest'
@@ -77,12 +62,12 @@ jobs:
       - name: Move binaries (Linux/MacOS)
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
-          mv ./target/${{ matrix.target }}/release/${{ env.RELEASE_BIN }} ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}/${{ env.RELEASE_BIN }}
+          mv ./target/release/rhealth ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}/${{ env.RELEASE_BIN }}
       - name: Move binaries (Windows)
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          cp ./target/${{ matrix.target }}/release/${{ env.RELEASE_BIN }}.exe ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}/${{ env.RELEASE_BIN }}.exe
+          cp ./target/release/${{ env.RELEASE_BIN }}.exe ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}/${{ env.RELEASE_BIN }}.exe
       - name: Create tarball
         shell: bash
         run: 7z a -ttar -so -an ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }} | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
@@ -118,21 +103,6 @@ jobs:
         with:
           name: ${{ env.LINUX_AMD64_TARGET }}
 
-      - name: Download Linux arm64 tarball
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.LINUX_ARM64_TARGET }}
-
-      - name: Download Windows tarball
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.WINDOWS_TARGET }}
-
-      - name: Download MacOS tarball
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.MACOS_TARGET }}
-
       - name: Release Linux amd64 tarball
         uses: actions/upload-release-asset@v1
         env:
@@ -143,32 +113,3 @@ jobs:
           asset_content_type: application/gzip
           asset_name: rhealth-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_AMD64_TARGET }}.tar.gz
 
-      - name: Release Linux arm64 tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./rhealth-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_ARM64_TARGET }}.tar.gz
-          asset_content_type: application/gzip
-          asset_name: rhealth-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_ARM64_TARGET }}.tar.gz
-
-      - name: Release Windows tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./rhealth-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
-          asset_content_type: application/gzip
-          asset_name: rhealth-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
-
-      - name: Release MacOS tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./rhealth-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
-          asset_content_type: application/gzip
-          asset_name: rhealth-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
