@@ -86,20 +86,20 @@ impl HealthChecker {
             .map(|node| node.status())
     }
 
-    pub fn check(&mut self, u: usize) -> Result<NodeStatus, Box<dyn Error>> {
-        self.nodes[u].check()
+    pub async fn check(&mut self, u: usize) -> Result<NodeStatus, Box<dyn Error>> {
+        self.nodes[u].check().await
     }
 
-    pub fn check_by_id(&mut self, id: &str) -> Result<NodeStatus, Box<dyn Error>> {
+    pub async fn check_by_id(&mut self, id: &str) -> Result<NodeStatus, Box<dyn Error>> {
         match self.nodes.iter_mut().find(|x| x.id == id) {
-            Some(x) => x.check(),
+            Some(x) => x.check().await,
             None => Err("Cannot find node".into()),
         }
     }
 
-    pub fn check_all(&mut self) {
+    pub async fn check_all(&mut self) {
         for node in &mut self.nodes {
-            _ = node.check();
+            _ = node.check().await;
         }
     }
 }

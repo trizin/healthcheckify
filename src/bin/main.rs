@@ -1,30 +1,27 @@
 use std::sync::{Arc, Mutex};
 
+use actix_web::{web::Data, App, HttpServer};
 use healthchecker::{
     config::config::AppConfig,
     healthcheck::health_checker::HealthChecker,
-    http::{handler::handle_connection, listener},
-    thread::threadpool::ThreadPool,
+    http::handler::{home, service_status},
 };
 
-fn main() {
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
     let config = AppConfig::new();
-
     let health_checker = HealthChecker::new(config.config_file);
-    let pool = ThreadPool::new(config.thread_count).unwrap();
-
-    let lstnr = listener::listen(&config.addr).expect("Cannot listen address");
-
     let hc = Arc::new(Mutex::new(health_checker));
 
-    for stream in lstnr.incoming() {
-        let stream = stream.unwrap();
-        let hc_copy = Arc::clone(&hc);
+    HttpServer::new(move || {
+        let app = App::new()
+            .app_data(Data::new(hc.clone()))
+            .service(home)
+            .service(service_status);
 
-        pool.execute(|| {
-            if let Err(err) = handle_connection(stream, hc_copy) {
-                println!("An error occured {}", err)
-            }
-        })
-    }
+        return app;
+    })
+    .bind(("127.0.0.1", 4242))?
+    .run()
+    .await
 }

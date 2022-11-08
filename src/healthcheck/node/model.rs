@@ -61,7 +61,7 @@ impl Node {
         self.status
     }
 
-    pub fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
+    pub async fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
         if std::env::var("ENV").unwrap_or_else(|_| String::from("debug")) == "debug" {
             println!("Checking url: '{}'", self.config.url);
         }
@@ -81,15 +81,18 @@ impl Node {
         self.status = NodeStatus::Processing;
 
         let request = {
-            let client = reqwest::blocking::Client::builder()
+            let client = reqwest::Client::builder()
                 .timeout(Duration::from_secs(self.call_timeout))
                 .build()?;
             match self.method {
-                RequestMethod::GET => client.get(&self.config.url).send(),
-                RequestMethod::POST => client
-                    .post(&self.config.url)
-                    .body(self.request_body.clone())
-                    .send(),
+                RequestMethod::GET => client.get(&self.config.url).send().await,
+                RequestMethod::POST => {
+                    client
+                        .post(&self.config.url)
+                        .body(self.request_body.clone())
+                        .send()
+                        .await
+                }
             }
         };
 
@@ -109,7 +112,7 @@ impl Node {
                 }
             }
             NodeCheckStrategy::BodyContains(x) => {
-                let body = response.text().unwrap();
+                let body = response.text().await.unwrap();
                 if body.contains(x) {
                     self.status = NodeStatus::Healthy;
                 } else {
@@ -201,7 +204,6 @@ mod tests {
 
         assert_eq!(node.status, NodeStatus::Processing);
         let val = node.check();
-        println!("{:?}", val);
         assert_eq!(node.status, NodeStatus::Down);
     }
     #[test]
@@ -237,7 +239,6 @@ mod tests {
 
         assert_eq!(node.status, NodeStatus::Processing);
         let val = node.check();
-        println!("{:?}", val);
         assert_eq!(node.status, NodeStatus::Down);
     }
 }
