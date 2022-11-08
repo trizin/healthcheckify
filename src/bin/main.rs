@@ -13,6 +13,8 @@ async fn main() -> std::io::Result<()> {
     let health_checker = HealthChecker::new(config.config_file);
     let hc = Arc::new(Mutex::new(health_checker));
 
+    println!("Listening on: {}", config.addr);
+
     HttpServer::new(move || {
         let app = App::new()
             .app_data(Data::new(hc.clone()))
@@ -21,7 +23,7 @@ async fn main() -> std::io::Result<()> {
 
         return app;
     })
-    .bind(("127.0.0.1", 4242))?
+    .bind(config.addr)?
     .run()
     .await
 }
