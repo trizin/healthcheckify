@@ -101,7 +101,7 @@ impl Node {
             return Err(err.into());
         }
 
-        let response = request.unwrap();
+        let response = request?;
         match &self.strategy {
             NodeCheckStrategy::StatusCode => {
                 let status_code = response.status();
@@ -129,15 +129,10 @@ impl Node {
 
 #[cfg(test)]
 mod tests {
-    use crate::healthcheck::node::config::NodeConfig;
-    use crate::healthcheck::node::model::Node;
-    use crate::healthcheck::node::model::NodeCheckStrategy;
-    use crate::healthcheck::node::model::RequestMethod;
+    use super::*;
 
-    use super::NodeStatus;
-
-    #[test]
-    fn test_post_statuscode() {
+    #[tokio::test]
+    async fn test_post_statuscode() {
         let node_config = NodeConfig::new("https://httpbin.org/post".to_string());
         let mut node = Node::new(
             node_config,
@@ -150,12 +145,12 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check();
+        let _ = node.check().await.unwrap();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
 
-    #[test]
-    fn test_post_contains() {
+    #[tokio::test]
+    async fn test_post_contains() {
         let node_config = NodeConfig::new("https://httpbin.org/post".to_string());
         let mut node = Node::new(
             node_config,
@@ -168,12 +163,12 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check();
+        let _ = node.check().await.unwrap();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
 
-    #[test]
-    fn test_check_success() {
+    #[tokio::test]
+    async fn test_check_success() {
         let node_config = NodeConfig::new("https://google.com".to_string());
         let mut node = Node::new(
             node_config,
@@ -186,11 +181,11 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check();
+        let _ = node.check().await.unwrap();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
-    #[test]
-    fn test_check_down() {
+    #[tokio::test]
+    async fn test_check_down() {
         let node_config = NodeConfig::new("https://thiswebsitedoesntexists.xcxc".to_string());
         let mut node = Node::new(
             node_config,
@@ -203,11 +198,11 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let val = node.check();
+        let _ = node.check().await;
         assert_eq!(node.status, NodeStatus::Down);
     }
-    #[test]
-    fn test_check_with_high_timeout() {
+    #[tokio::test]
+    async fn test_check_with_high_timeout() {
         let node_config = NodeConfig::new("https://google.com".to_string());
         let mut node = Node::new(
             node_config,
@@ -220,12 +215,12 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check();
+        let _ = node.check().await;
         assert_eq!(node.status, NodeStatus::Healthy);
     }
 
-    #[test]
-    fn test_timeout() {
+    #[tokio::test]
+    async fn test_timeout() {
         let node_config = NodeConfig::new("https://httpbin.org/delay/2".to_string());
         let mut node = Node::new(
             node_config,
@@ -238,7 +233,7 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let val = node.check();
+        let _ = node.check().await;
         assert_eq!(node.status, NodeStatus::Down);
     }
 }
