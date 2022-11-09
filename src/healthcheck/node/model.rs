@@ -27,7 +27,7 @@ pub(crate) struct Node {
     status: NodeStatus,
     last_check: SystemTime,
     strategy: NodeCheckStrategy,
-    timeout: u64,
+    interval: u64,
     method: RequestMethod,
     request_body: String,
     call_timeout: u64,
@@ -38,7 +38,7 @@ impl Node {
         config: NodeConfig,
         id: String,
         strategy: NodeCheckStrategy,
-        timeout: u64,
+        interval: u64,
         method: RequestMethod,
         request_body: Option<String>,
         call_timeout: u64,
@@ -49,10 +49,10 @@ impl Node {
             config,
             status: NodeStatus::Processing,
             last_check: SystemTime::now()
-                .checked_sub(Duration::from_secs(timeout + 10))
+                .checked_sub(Duration::from_secs(interval + 10))
                 .unwrap(),
             strategy,
-            timeout,
+            interval,
             method,
             request_body,
             call_timeout,
@@ -75,7 +75,7 @@ impl Node {
             .unwrap_err()
             .duration()
             .as_secs()
-            < self.timeout
+            < self.interval
         {
             // check every 10 seconds
             log("Returning cached status".to_string(), LogLevel::Info);
@@ -211,7 +211,7 @@ mod tests {
     }
     #[tokio::test]
     async fn test_check_with_high_timeout() {
-        let node_config = NodeConfig::new("https://google.com".to_string());
+        let node_config = NodeConfig::new("https://httpbin.org/delay/2".to_string());
         let mut node = Node::new(
             node_config,
             "5".to_string(),
