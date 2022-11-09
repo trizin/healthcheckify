@@ -49,7 +49,7 @@ impl HealthChecker {
                 Some(request_body)
             };
 
-            let call_timeout = config["callTimeout"].as_u64().unwrap_or(30u64);
+            let call_timeout = config["call_timeout"].as_u64().unwrap_or(30u64);
 
             nodes.push(Node::new(
                 node_config,
