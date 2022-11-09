@@ -2,7 +2,10 @@ use std::sync::Mutex;
 
 use actix_web::{get, http::StatusCode, web, HttpResponse, Responder};
 
-use crate::healthcheck::{health_checker::HealthChecker, node::model::NodeStatus};
+use crate::{
+    healthcheck::{health_checker::HealthChecker, node::model::NodeStatus},
+    logger::log::{log, LogLevel},
+};
 
 #[get("/")]
 pub async fn home(health_checker: web::Data<Mutex<HealthChecker>>) -> impl Responder {
@@ -29,14 +32,14 @@ pub async fn service_status(
     path: web::Path<String>,
     health_checker: web::Data<Mutex<HealthChecker>>,
 ) -> impl Responder {
-    println!("Request for service {}", path);
+    log(format!("Request for service: {}", path), LogLevel::Info);
     let node_id = path.into_inner();
     let stat = health_checker
         .lock()
         .unwrap()
         .check_by_id(node_id.as_str())
         .await;
-    println!("Status: {:?}", stat);
+    log(format!("Status: {:?}", stat), LogLevel::Info);
     match stat {
         Ok(stat) if stat == NodeStatus::Down => get_response("error", 500),
         Ok(stat) if stat == NodeStatus::Healthy => get_response("ok", 200),

@@ -1,3 +1,5 @@
+use crate::logger::log::{log, LogLevel};
+
 use super::config::NodeConfig;
 use std::error::Error;
 use std::time::{Duration, SystemTime};
@@ -62,9 +64,10 @@ impl Node {
     }
 
     pub async fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
-        if std::env::var("ENV").unwrap_or_else(|_| String::from("debug")) == "debug" {
-            println!("Checking url: '{}'", self.config.url);
-        }
+        log(
+            format!("Checking url: '{}'", self.config.url),
+            LogLevel::Info,
+        );
 
         if self
             .last_check
@@ -75,11 +78,16 @@ impl Node {
             < self.timeout
         {
             // check every 10 seconds
+            log("Returning cached status".to_string(), LogLevel::Info);
             return Ok(self.status());
         }
 
         self.status = NodeStatus::Processing;
 
+        log(
+            format!("Sending request, timeout:{}", self.call_timeout),
+            LogLevel::Info,
+        );
         let request = {
             let client = reqwest::Client::builder()
                 .timeout(Duration::from_secs(self.call_timeout))
