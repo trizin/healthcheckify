@@ -1,11 +1,11 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use actix_web::{get, http::StatusCode, web, HttpResponse, Responder};
 
 use crate::healthcheck::{health_checker::HealthChecker, node::model::NodeStatus};
 
 #[get("/")]
-pub async fn home(health_checker: web::Data<Arc<Mutex<HealthChecker>>>) -> impl Responder {
+pub async fn home(health_checker: web::Data<Mutex<HealthChecker>>) -> impl Responder {
     let mut response = String::from("");
     health_checker.lock().unwrap().check_all().await;
     let ids = health_checker.lock().unwrap().get_node_ids();
@@ -27,15 +27,16 @@ pub async fn home(health_checker: web::Data<Arc<Mutex<HealthChecker>>>) -> impl 
 #[get("/{service_id}")]
 pub async fn service_status(
     path: web::Path<String>,
-    health_checker: web::Data<Arc<Mutex<HealthChecker>>>,
+    health_checker: web::Data<Mutex<HealthChecker>>,
 ) -> impl Responder {
+    println!("Request for service {}", path);
     let node_id = path.into_inner();
     let stat = health_checker
         .lock()
         .unwrap()
         .check_by_id(node_id.as_str())
         .await;
-
+    println!("Status: {:?}", stat);
     match stat {
         Ok(stat) if stat == NodeStatus::Down => get_response("error", 500),
         Ok(stat) if stat == NodeStatus::Healthy => get_response("ok", 200),

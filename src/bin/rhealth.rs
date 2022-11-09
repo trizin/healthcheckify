@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use actix_web::{web::Data, App, HttpServer};
 use healthchecker::{
@@ -11,13 +11,13 @@ use healthchecker::{
 async fn main() -> std::io::Result<()> {
     let config = AppConfig::new();
     let health_checker = HealthChecker::new(config.config_file);
-    let hc = Arc::new(Mutex::new(health_checker));
+    let hc = Data::new(Mutex::new(health_checker));
 
     println!("Listening on: {}", config.addr);
 
     HttpServer::new(move || {
         let app = App::new()
-            .app_data(Data::new(hc.clone()))
+            .app_data(Data::clone(&hc))
             .service(home)
             .service(service_status);
 
