@@ -32,4 +32,28 @@ mod tests {
         assert!(parsed[1]["url"].as_str().unwrap() == "https://google.com/");
         assert!(parsed[2]["url"].as_str().unwrap() == "http://osdfsdfksdf.comasdas");
     }
+
+    #[test]
+    fn test_parser_service() {
+        let data = r#"
+          [
+          {
+    "id":"test",
+    "services":[
+            {"url":"http://localhost"},
+            {"url":"http://localhost"}
+]
+}
+    ]
+        "#
+        .to_string();
+
+        let parsed = parse_config(data).unwrap();
+
+        assert!(parsed[0]["id"].as_str().unwrap() == "test");
+        assert!(parsed[0]["services"][0]["url"].as_str().unwrap() == "http://localhost");
+
+        let services = parse_config(parsed[0]["services"].to_string()).unwrap();
+        assert!(services[0]["url"].as_str().unwrap() == "http://localhost");
+    }
 }
