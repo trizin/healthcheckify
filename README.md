@@ -31,10 +31,12 @@ Config file is an array of service configurations.
 Example service configuration:
 ```json
 {
-  "id": "my_service",
-  "url": "http://localhost:3000/check",
-  "strategy": "statuscode",
-  "interval": 10
+   "id": "my_service",
+   "services": [
+      "url": "http://localhost:3000/check",
+      "strategy": "statuscode",
+      "interval": 10
+   ]
 }
 ```
 
@@ -43,18 +45,22 @@ Example config file:
 [
   {
     "id": "my_service_1",
-    "url": "http://localhost:3000/check",
-    "strategy": "statuscode",
-    "interval": 10
+    "services": [
+      "url": "http://localhost:3000/check",
+      "strategy": "statuscode",
+      "interval": 10
+    ]
   },
   {
     "id": "my_service_2",
-    "url": "http://localhost:3001/check",
-    "strategy": "stringcontains",
-    "strategy_string": "success",
-    "interval": 10,
-    "method": "POST",
-    "call_timeout": 5
+    "services": [
+      "url": "http://localhost:3001/check",
+      "strategy": "stringcontains",
+      "strategy_string": "success",
+      "interval": 10,
+      "method": "POST",
+      "call_timeout": 5
+    ]    
   }
 ]
 ```

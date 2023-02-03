@@ -10,7 +10,7 @@ use crate::{
 #[get("/")]
 pub async fn home(health_checker: web::Data<Mutex<HealthChecker>>) -> impl Responder {
     let mut response = String::from("");
-    health_checker.lock().unwrap().check_all().await;
+    health_checker.lock().unwrap().check_all();
     let ids = health_checker.lock().unwrap().get_node_ids();
     for node_id in ids {
         response += &format!("{}: ", node_id);
@@ -34,11 +34,7 @@ pub async fn service_status(
 ) -> impl Responder {
     log(format!("Request for service: {}", path), LogLevel::Info);
     let node_id = path.into_inner();
-    let stat = health_checker
-        .lock()
-        .unwrap()
-        .check_by_id(node_id.as_str())
-        .await;
+    let stat = health_checker.lock().unwrap().check_by_id(node_id.as_str());
     log(format!("Status: {:?}", stat), LogLevel::Info);
     match stat {
         Ok(stat) if stat == NodeStatus::Down => get_response("error", 500),
