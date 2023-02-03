@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 
 use actix_web::{web::Data, App, HttpServer};
-use healthchecker::{
+use healthcheckify::{
     config::config::AppConfig,
     healthcheck::health_checker::HealthChecker,
     http::handler::{home, service_status},
