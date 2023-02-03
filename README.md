@@ -1,4 +1,4 @@
-# Service Health Checker
+# HealthCheckify
 
 Sends GET or POST request to the node's health check endpoints and looks for the correct response code or body.
 
@@ -7,6 +7,7 @@ Sends GET or POST request to the node's health check endpoints and looks for the
 Create a `config.json` and a `.env` file in the root directory of the project.
 
 ### Set up env vars
+
 - `BIND_ADDR`
 Address and port to bind the HTTP server to. Default: `127.0.0.1:8080`
 
