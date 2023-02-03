@@ -90,20 +90,20 @@ impl HealthChecker {
             .map(|node| node.status())
     }
 
-    pub async fn check(&mut self, u: usize) -> Result<NodeStatus, Box<dyn Error>> {
-        self.nodes[u].check().await
+    pub fn check(&mut self, u: usize) -> Result<NodeStatus, Box<dyn Error>> {
+        self.nodes[u].check()
     }
 
-    pub async fn check_by_id(&mut self, id: &str) -> Result<NodeStatus, Box<dyn Error>> {
+    pub fn check_by_id(&mut self, id: &str) -> Result<NodeStatus, Box<dyn Error>> {
         match self.nodes.iter_mut().find(|x| x.id == id) {
-            Some(x) => x.check().await,
+            Some(x) => x.check(),
             None => Err("Cannot find node".into()),
         }
     }
 
-    pub async fn check_all(&mut self) {
+    pub fn check_all(&mut self) {
         for node in self.nodes.iter_mut() {
-            _ = node.check().await;
+            _ = node.check();
         }
     }
 }
@@ -112,8 +112,8 @@ impl HealthChecker {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_check_success() {
+    #[test]
+    fn test_check_success() {
         let data = r#"
         [
         {
@@ -131,13 +131,13 @@ mod tests {
         assert_eq!(checker.nodes[0].id, "test");
         assert_eq!(checker.status(0), NodeStatus::Processing);
 
-        checker.check_all().await;
+        checker.check_all();
 
         assert_eq!(checker.status(0), NodeStatus::Down);
     }
 
-    #[tokio::test]
-    async fn test_check_multiple() {
+    #[test]
+    fn test_check_multiple() {
         let data = r#"
         [
         {
@@ -171,7 +171,7 @@ mod tests {
 
         let mut checker = HealthChecker::new(data.to_string());
 
-        checker.check_all().await;
+        checker.check_all();
 
         assert_eq!(checker.status(0), NodeStatus::Down);
         assert_eq!(checker.status(1), NodeStatus::Healthy);
@@ -182,8 +182,8 @@ mod tests {
         assert_eq!(checker.status_by_id("test3").unwrap(), NodeStatus::Down);
     }
 
-    #[tokio::test]
-    async fn test_stringcontains_strategy() {
+    #[test]
+    fn test_stringcontains_strategy() {
         let data = r#"
         [
         {
@@ -200,14 +200,14 @@ mod tests {
         ]"#;
 
         let mut checker = HealthChecker::new(data.to_string());
-        _ = checker.check_by_id("test1").await;
+        _ = checker.check_by_id("test1");
 
         assert_eq!(checker.status(0), NodeStatus::Healthy);
 
         assert_eq!(checker.status_by_id("test1").unwrap(), NodeStatus::Healthy);
     }
-    #[tokio::test]
-    async fn test_stringcontains_strategy_fails() {
+    #[test]
+    fn test_stringcontains_strategy_fails() {
         let data = r#"
         [
         {
@@ -225,14 +225,14 @@ mod tests {
 
         let mut checker = HealthChecker::new(data.to_string());
 
-        _ = checker.check_by_id("test1").await;
+        _ = checker.check_by_id("test1");
 
         assert_eq!(checker.status(0), NodeStatus::Down);
         assert_eq!(checker.status_by_id("test1").unwrap(), NodeStatus::Down);
     }
 
-    #[tokio::test]
-    async fn test_post_method() {
+    #[test]
+    fn test_post_method() {
         let data = r#"
         [
         {
@@ -251,7 +251,7 @@ mod tests {
 
         let mut checker = HealthChecker::new(data.to_string());
 
-        _ = checker.check_by_id("test1").await;
+        _ = checker.check_by_id("test1");
 
         assert_eq!(checker.status(0), NodeStatus::Healthy);
     }

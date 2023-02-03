@@ -63,7 +63,7 @@ impl Node {
         self.status
     }
 
-    pub async fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
+    pub fn check(&mut self) -> Result<NodeStatus, Box<dyn Error>> {
         log(
             format!("Checking url: '{}'", self.config.url),
             LogLevel::Info,
@@ -81,35 +81,34 @@ impl Node {
             log("Returning cached status".to_string(), LogLevel::Info);
             return Ok(self.status());
         }
-
         self.status = NodeStatus::Processing;
-
+        self.last_check = SystemTime::now();
         log(
             format!("Sending request, timeout:{}", self.call_timeout),
             LogLevel::Info,
         );
         let request = {
-            let client = reqwest::Client::builder()
+            let client = reqwest::blocking::Client::builder()
                 .timeout(Duration::from_secs(self.call_timeout))
                 .build()?;
             match self.method {
-                RequestMethod::GET => client.get(&self.config.url).send().await,
-                RequestMethod::POST => {
-                    client
-                        .post(&self.config.url)
-                        .body(self.request_body.clone())
-                        .send()
-                        .await
-                }
+                RequestMethod::GET => client.get(&self.config.url).send(),
+                RequestMethod::POST => client
+                    .post(&self.config.url)
+                    .body(self.request_body.clone())
+                    .send(),
             }
         };
 
+        log("Request sent".to_string(), LogLevel::Info);
+
         if let Err(err) = request {
+            log(format!("Error: {}", err), LogLevel::Error);
             self.status = NodeStatus::Down;
             return Err(err.into());
         }
 
-        let response = request?;
+        let response = request.unwrap();
         match &self.strategy {
             NodeCheckStrategy::StatusCode => {
                 let status_code = response.status();
@@ -120,7 +119,7 @@ impl Node {
                 }
             }
             NodeCheckStrategy::BodyContains(x) => {
-                let body = response.text().await.unwrap();
+                let body = response.text().unwrap();
                 if body.contains(x) {
                     self.status = NodeStatus::Healthy;
                 } else {
@@ -128,8 +127,6 @@ impl Node {
                 }
             }
         }
-
-        self.last_check = SystemTime::now();
 
         Ok(self.status())
     }
@@ -139,8 +136,8 @@ impl Node {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_post_statuscode() {
+    #[test]
+    fn test_post_statuscode() {
         let node_config = NodeConfig::new("https://httpbin.org/post".to_string());
         let mut node = Node::new(
             node_config,
@@ -153,12 +150,12 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await.unwrap();
+        let _ = node.check().unwrap();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
 
-    #[tokio::test]
-    async fn test_post_contains() {
+    #[test]
+    fn test_post_contains() {
         let node_config = NodeConfig::new("https://httpbin.org/post".to_string());
         let mut node = Node::new(
             node_config,
@@ -171,12 +168,12 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await.unwrap();
+        let _ = node.check().unwrap();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
 
-    #[tokio::test]
-    async fn test_check_success() {
+    #[test]
+    fn test_check_success() {
         let node_config = NodeConfig::new("https://google.com".to_string());
         let mut node = Node::new(
             node_config,
@@ -189,11 +186,11 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await.unwrap();
+        let _ = node.check().unwrap();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
-    #[tokio::test]
-    async fn test_check_down() {
+    #[test]
+    fn test_check_down() {
         let node_config = NodeConfig::new("https://thiswebsitedoesntexists.xcxc".to_string());
         let mut node = Node::new(
             node_config,
@@ -206,11 +203,11 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await;
+        let _ = node.check();
         assert_eq!(node.status, NodeStatus::Down);
     }
-    #[tokio::test]
-    async fn test_check_with_high_timeout() {
+    #[test]
+    fn test_check_with_high_timeout() {
         let node_config = NodeConfig::new("https://httpbin.org/delay/2".to_string());
         let mut node = Node::new(
             node_config,
@@ -223,12 +220,12 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await;
+        let _ = node.check();
         assert_eq!(node.status, NodeStatus::Healthy);
     }
 
-    #[tokio::test]
-    async fn test_timeout() {
+    #[test]
+    fn test_timeout() {
         let node_config = NodeConfig::new("https://httpbin.org/delay/2".to_string());
         let mut node = Node::new(
             node_config,
@@ -241,7 +238,25 @@ mod tests {
         );
 
         assert_eq!(node.status, NodeStatus::Processing);
-        let _ = node.check().await;
+        let _ = node.check();
         assert_eq!(node.status, NodeStatus::Down);
+    }
+
+    #[test]
+    fn test_timeout_post() {
+        let node_config = NodeConfig::new("https://httpbin.org/delay/5".to_string());
+        let mut node = Node::new(
+            node_config,
+            "5".to_string(),
+            NodeCheckStrategy::StatusCode,
+            10,
+            RequestMethod::POST,
+            None,
+            10,
+        );
+
+        assert_eq!(node.status, NodeStatus::Processing);
+        let _ = node.check();
+        assert_eq!(node.status, NodeStatus::Healthy);
     }
 }
