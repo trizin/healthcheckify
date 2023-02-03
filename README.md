@@ -10,8 +10,8 @@ Create a `config.json` and a `.env` file in the root directory of the project.
 - `BIND_ADDR`
 Address and port to bind the HTTP server to. Default: `127.0.0.1:8080`
 
-- `THREAD_COUNT`
-Number of threads to use to handle HTTP requests. Default: 5
+- `LOG_LEVEL`
+Log level, can be set to; `debug`, `info`, `warn`, `error`. Default is `error`
 
 ### Set up config file
 
